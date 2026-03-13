@@ -238,6 +238,8 @@ def slack_events():
 
 @flask_app.route("/")
 def health():
+    if body.get("type") == "url_verification":
+        return jsonify({"challenge": body["challenge"]})    
     return "running", 200
     
 if __name__ == "__main__":
