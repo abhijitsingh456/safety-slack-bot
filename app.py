@@ -6,7 +6,7 @@ import os
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 
-from flask import Flask, request
+from flask import Flask, request, jsonify
 from slack_bolt.adapter.flask import SlackRequestHandler
 
 logging.basicConfig(level=logging.INFO)
