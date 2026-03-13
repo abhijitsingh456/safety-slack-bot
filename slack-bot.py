@@ -6,9 +6,18 @@ import os
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 
+from flask import Flask, request
+from slack_bolt.adapter.flask import SlackRequestHandler
+
 logging.basicConfig(level=logging.INFO)
 
-app = App(token=os.environ["SLACK_BOT_TOKEN"])
+slack_app = App(
+    token=os.environ["SLACK_BOT_TOKEN"],
+    signing_secret=os.environ["SLACK_SIGNING_SECRET"]
+)
+
+flask_app = Flask(__name__)
+handler = SlackRequestHandler(slack_app)
 
 API_URL = "https://sailbslsafety.pythonanywhere.com/api/create-inspection-record"
 
@@ -108,7 +117,7 @@ modal_view = {
     ]
 }
 
-@app.command("/inspection")
+@slack_app.command("/inspection")
 def open_modal(ack, body, client):
     ack()
 
@@ -119,7 +128,7 @@ def open_modal(ack, body, client):
         view=modal_view
     )
 
-@app.view("inspection_submit")
+@slack_app.view("inspection_submit")
 def handle_submission(ack, body, view, client, logger):
 
     ack()
@@ -217,5 +226,10 @@ def handle_submission(ack, body, view, client, logger):
             text="❌ Network Error: Could not reach backend API"
         )
 
+# -------- HTTP ROUTE --------
+@flask_app.route("/slack/events", methods=["POST"])
+def slack_events():
+    return handler.handle(request)
+
 if __name__ == "__main__":
-    SocketModeHandler(app, os.environ["SLACK_APP_TOKEN"]).start()
+    flask_app.run(host="0.0.0.0", port=3000)
