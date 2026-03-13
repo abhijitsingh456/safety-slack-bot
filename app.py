@@ -227,23 +227,23 @@ def handle_submission(ack, body, view, client, logger):
         )
 
 # -------- HTTP ROUTE --------
+# HEALTH CHECK ROUTE (Render + Slack test)
+@flask_app.route("/", methods=["GET"])
+def health():
+    return "running", 200
+
+# SLACK EVENTS ROUTE
 @flask_app.route("/slack/events", methods=["POST"])
 def slack_events():
-    body = request.json
-    
-    if body.get("type") == "url_verification":
+
+    body = request.get_json(silent=True)
+
+    # URL verification
+    if body and body.get("type") == "url_verification":
         return jsonify({"challenge": body["challenge"]})
-    
+
     return handler.handle(request)
 
-@flask_app.route("/")
-def health():
-    
-    body = request.json
-    
-    if body.get("type") == "url_verification":
-        return jsonify({"challenge": body["challenge"]})    
-    return "running", 200
-    
 if __name__ == "__main__":
-    flask_app.run(host="0.0.0.0", port=3000)
+    port = int(os.environ.get("PORT", 10000))
+    flask_app.run(host="0.0.0.0", port=port)
