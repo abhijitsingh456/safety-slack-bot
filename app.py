@@ -229,6 +229,11 @@ def handle_submission(ack, body, view, client, logger):
 # -------- HTTP ROUTE --------
 @flask_app.route("/slack/events", methods=["POST"])
 def slack_events():
+    body = request.json
+    
+    if body.get("type") == "url_verification":
+        return jsonify({"challenge": body["challenge"]})
+    
     return handler.handle(request)
 
 if __name__ == "__main__":
